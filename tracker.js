@@ -143,7 +143,7 @@ const addEmployee = async () => {
         'SELECT * FROM employee'
     );
     const managerChoices = await employees.map(({ id, first_name, last_name }) =>
-        ({ value: id, Name: first_name + last_name }));
+        ({ name: `${first_name} ${last_name}`, value: id }));
 
     console.log(managerChoices);
 
