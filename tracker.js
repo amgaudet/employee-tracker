@@ -18,7 +18,7 @@ const renderMenu = () => {
             type: 'list',
             message: 'What would you like to do?',
             choices: ['Add Employee', 'Add Role', 'Add Department',
-                'View Employee', 'View Role', 'View Department', 'Update Employee Role'],
+                'View Employee', 'View Role', 'View Departments', 'Update Employee Role'],
             name: 'selection'
         }
     ]).then(res => {
@@ -29,9 +29,46 @@ const renderMenu = () => {
                 break;
             case 'Add Department': addDepartment();
                 break;
-
+            case 'View Departments': renderDeptList();
+                break;
+            case 'View Role': renderRoleList();
+                break;
+            case 'View Employee': renderEmployeeList();
+                break;
             default: connection.end();
+        };
+    });
+};
+
+const renderDeptList = () => {
+    connection.query(
+        'SELECT * FROM department',
+        (err, res) => {
+            if (err) throw err;
+            console.table(res);
+            renderMenu();
         }
+    );
+};
+
+const renderRoleList = () => {
+    query = 'SELECT role.department_id, role.title, role.salary, department.id, department.name ';
+    query += 'FROM role INNER JOIN department ON (role.department_id = department.id)';
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        renderMenu();
+    });
+};
+
+const renderEmployeeList = () => {
+    query = `SELECT first_name, last_name, role_id, role.id, salary, department_id, department.id, name
+            FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON
+            role.department_id = department.id`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        renderMenu();
     });
 };
 
@@ -51,6 +88,7 @@ const addDepartment = () => {
             (err, res) => {
                 if (err) throw err;
                 console.log('New department successfully added!');
+                renderMenu();
             }
         );
     })
@@ -96,12 +134,20 @@ const addRole = async () => {
 };
 
 const addEmployee = async () => {
-    const choices = await connection.query(
+    const role = await connection.query(
         'SELECT * FROM role'
     );
-    const roleChoices = await choices.map(({ id, title }) => ({ name: title, value: id }));
+    const roleChoices = await role.map(({ id, title }) => ({ name: title, value: id }));
 
-    const { first_name, last_name, role_id } = await inquirer.prompt([
+    const employees = await connection.query(
+        'SELECT * FROM employee'
+    );
+    const managerChoices = await employees.map(({ id, first_name, last_name }) =>
+        ({ value: id, Name: first_name + last_name }));
+
+    console.log(managerChoices);
+
+    const { first_name, last_name, role_id, manager_id } = await inquirer.prompt([
         {
             type: 'input',
             message: 'Employee first name',
@@ -109,7 +155,7 @@ const addEmployee = async () => {
         },
         {
             type: 'input',
-            message: 'Employee first name',
+            message: 'Employee last name',
             name: 'last_name'
         },
         {
@@ -117,12 +163,13 @@ const addEmployee = async () => {
             message: 'Employee role:',
             name: 'role_id',
             choices: roleChoices
-        }
-        // {
-        //     type: 'input',
-        //     message: 'Employee first name',
-        //     name: 'manager_id'
-        // },
+        },
+        {
+            type: 'list',
+            message: 'Employee manager',
+            name: 'manager_id',
+            choices: managerChoices
+        },
 
     ]);
     connection.query(
@@ -130,7 +177,8 @@ const addEmployee = async () => {
         {
             first_name: first_name,
             last_name: last_name,
-            role_id: role_id
+            role_id: role_id,
+            manager_id: manager_id
         },
         (err, res) => {
             if (err) throw err;
