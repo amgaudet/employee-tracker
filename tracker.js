@@ -17,8 +17,8 @@ const renderMenu = () => {
         {
             type: 'list',
             message: 'What would you like to do?',
-            choices: ['Add Employee', 'Add Role', 'Add Department',
-                'View Employee', 'View Role', 'View Departments', 'Update Employee Role'],
+            choices: ['Add Employee', 'Add Role', 'Add Department', 'View Employee', 'View Role',
+                'View Departments', 'Update Employee Role', 'Update Employee Manager', 'Exit'],
             name: 'selection'
         }
     ]).then(res => {
@@ -35,14 +35,96 @@ const renderMenu = () => {
                 break;
             case 'View Employee': renderEmployeeList();
                 break;
+            case 'Update Employee Role': updateEmployeeRole();
+                break;
+            case 'Update Employee Manager': updateEmployeeManager();
+                break;
             default: connection.end();
         };
     });
 };
 
+const updateEmployeeRole = async () => {
+    const employeeList = await connection.query(
+        'SELECT * FROM employee'
+    );
+    const employeeChoices = employeeList.map(({ first_name, last_name, id }) =>
+        ({ name: `${first_name} ${last_name}`, value: id }));
+
+    const role = await connection.query(
+        'SELECT * FROM role'
+    );
+    const roleChoices = role.map(({ id, title }) => ({ name: title, value: id }));
+
+    const { employee, newRole } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select Employee to update:',
+            choices: employeeChoices,
+            name: 'employee'
+        },
+        {
+            type: 'list',
+            message: 'Select new role:',
+            choices: roleChoices,
+            name: 'newRole'
+        }
+    ]);
+
+    connection.query(
+        'UPDATE employee SET ? WHERE ?',
+        [{
+            role_id: newRole
+        },
+        {
+            id: employee
+        }]
+    );
+    console.log('New role added to employee!');
+    renderMenu();
+}
+
+const updateEmployeeManager = async () => {
+    const employeeList = await connection.query(
+        'SELECT * FROM employee'
+    );
+    const employeeChoices = employeeList.map(({ first_name, last_name, id }) =>
+        ({ name: `${first_name} ${last_name}`, value: id }));
+
+    const managerChoices = employeeList.map(({ first_name, last_name, id }) =>
+        ({ name: `${first_name} ${last_name}`, value: id }));
+
+    const { employee, newManager } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select Employee to update:',
+            choices: employeeChoices,
+            name: 'employee'
+        },
+        {
+            type: 'list',
+            message: 'Select new role:',
+            choices: managerChoices,
+            name: 'newManager'
+        }
+    ]);
+
+    connection.query(
+        'UPDATE employee SET ? WHERE ?',
+        [{
+            manager_id: newManager
+        },
+        {
+            id: employee
+        }]
+    );
+    console.log('New manager added to employee!');
+    renderMenu();
+}
+
 const renderDeptList = () => {
     connection.query(
-        'SELECT * FROM department',
+        'SELECT name FROM department',
         (err, res) => {
             if (err) throw err;
             console.table(res);
@@ -52,7 +134,7 @@ const renderDeptList = () => {
 };
 
 const renderRoleList = () => {
-    query = 'SELECT role.department_id, role.title, role.salary, department.id, department.name ';
+    query = 'SELECT role.title, role.salary, department.name ';
     query += 'FROM role INNER JOIN department ON (role.department_id = department.id)';
     connection.query(query, (err, res) => {
         if (err) throw err;
@@ -62,7 +144,7 @@ const renderRoleList = () => {
 };
 
 const renderEmployeeList = () => {
-    query = `SELECT first_name, last_name, role_id, role.id, salary, department_id, department.id, name
+    query = `SELECT first_name, last_name, salary, role.title, name
             FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON
             role.department_id = department.id`;
     connection.query(query, (err, res) => {
@@ -137,12 +219,12 @@ const addEmployee = async () => {
     const role = await connection.query(
         'SELECT * FROM role'
     );
-    const roleChoices = await role.map(({ id, title }) => ({ name: title, value: id }));
+    const roleChoices = role.map(({ id, title }) => ({ name: title, value: id }));
 
     const employees = await connection.query(
         'SELECT * FROM employee'
     );
-    const managerChoices = await employees.map(({ id, first_name, last_name }) =>
+    const managerChoices = employees.map(({ id, first_name, last_name }) =>
         ({ name: `${first_name} ${last_name}`, value: id }));
 
     console.log(managerChoices);
