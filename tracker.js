@@ -18,7 +18,9 @@ const renderMenu = () => {
             type: 'list',
             message: 'What would you like to do?',
             choices: ['Add Employee', 'Add Role', 'Add Department', 'View Employee', 'View Role',
-                'View Departments', 'Update Employee Role', 'Update Employee Manager', 'Exit'],
+                'View Departments', 'Update Employee Role', 'Update Employee Manager',
+                'View Employees by Manager', 'Delete Department', 'Delete Role', 'Delete Employee',
+                'Exit'],
             name: 'selection'
         }
     ]).then(res => {
@@ -39,10 +41,45 @@ const renderMenu = () => {
                 break;
             case 'Update Employee Manager': updateEmployeeManager();
                 break;
+            case 'View Employees by Manager': renderEmployeeByManager();
+                break;
+            case 'Delete Deptartment': deleteDepartment();
+                break;
+            case 'Delete Role': deleteRole();
+                break;
+            case 'Delete Employee': deleteEmployee();
+                break;
             default: connection.end();
         };
     });
 };
+
+const deleteDepartment = () => {
+    console.log('In progress');
+    renderMenu();
+}
+
+const deleteRole = () => {
+    console.log('In progress');
+    renderMenu();
+}
+
+const deleteEmployee = () => {
+    console.log('In progress');
+    renderMenu();
+}
+
+// const renderEmployeeByManager = async () => {
+//     const query = `SELECT m.first_name, m.last_name, employee.first_name, employee.last_name
+//     FROM employee AS m LEFT JOIN employee ON m.manager_id = employee.id`
+//     await connection.query(
+//         query, (err, res) => {
+//             if (err) throw err;
+//             console.table(res);
+//         }
+//     );
+//     renderMenu();
+// }
 
 const updateEmployeeRole = async () => {
     const employeeList = await connection.query(
@@ -61,6 +98,7 @@ const updateEmployeeRole = async () => {
             type: 'list',
             message: 'Select Employee to update:',
             choices: employeeChoices,
+
             name: 'employee'
         },
         {
@@ -103,7 +141,7 @@ const updateEmployeeManager = async () => {
         },
         {
             type: 'list',
-            message: 'Select new role:',
+            message: 'Select new manager:',
             choices: managerChoices,
             name: 'newManager'
         }
