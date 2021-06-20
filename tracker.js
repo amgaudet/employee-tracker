@@ -133,17 +133,35 @@ const deleteEmployee = async () => {
         });
 }
 
-// const renderEmployeeByManager = async () => {
-//     const query = `SELECT m.first_name, m.last_name, employee.first_name, employee.last_name
-//     FROM employee AS m LEFT JOIN employee ON m.manager_id = employee.id`
-//     await connection.query(
-//         query, (err, res) => {
-//             if (err) throw err;
-//             console.table(res);
-//         }
-//     );
-//     renderMenu();
-// }
+const renderEmployeeByManager = async () => {
+    const managerList = await connection.query(
+        'SELECT * FROM employee'
+    );
+    const managerChoices = managerList.map(({ first_name, last_name, id }) =>
+        ({ name: `${first_name} ${last_name}`, value: id }));
+
+    const { manager } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select manager:',
+            choices: managerChoices,
+            name: 'manager'
+        }
+    ])
+    const query = `SELECT first_name, last_name FROM employee WHERE ?`;
+
+    await connection.query(
+        query,
+        {
+            manager_id: manager
+        },
+        (err, res) => {
+            if (err) throw err;
+            console.table(res);
+            renderMenu();
+        }
+    );
+}
 
 const updateEmployeeRole = async () => {
     const employeeList = await connection.query(
