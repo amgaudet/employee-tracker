@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const util = require('util');
+const { NONAME } = require('dns');
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -194,6 +195,7 @@ const updateEmployeeManager = async () => {
 
     const managerChoices = employeeList.map(({ first_name, last_name, id }) =>
         ({ name: `${first_name} ${last_name}`, value: id }));
+    managerChoices.push({ name: 'None', value: 0 });
 
     const { employee, newManager } = await inquirer.prompt([
         {
@@ -327,8 +329,7 @@ const addEmployee = async () => {
     );
     const managerChoices = employees.map(({ id, first_name, last_name }) =>
         ({ name: `${first_name} ${last_name}`, value: id }));
-
-    console.log(managerChoices);
+    managerChoices.push({ name: 'None', value: 0 });
 
     const { first_name, last_name, role_id, manager_id } = await inquirer.prompt([
         {
