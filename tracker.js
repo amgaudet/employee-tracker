@@ -43,7 +43,7 @@ const renderMenu = () => {
                 break;
             case 'View Employees by Manager': renderEmployeeByManager();
                 break;
-            case 'Delete Deptartment': deleteDepartment();
+            case 'Delete Department': deleteDepartment();
                 break;
             case 'Delete Role': deleteRole();
                 break;
@@ -54,19 +54,82 @@ const renderMenu = () => {
     });
 };
 
-const deleteDepartment = () => {
-    console.log('In progress');
-    renderMenu();
+const deleteDepartment = async () => {
+    const choices = await connection.query(
+        'SELECT * FROM department'
+    );
+    const deptartmentChoices = choices.map(({ id, name }) => ({ name: name, value: id }));
+    const { delDept } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select department to delete:',
+            choices: deptartmentChoices,
+            name: 'delDept'
+        }
+    ]);
+    connection.query(
+        'DELETE FROM department WHERE ?',
+        {
+            id: delDept
+        },
+        (err, res) => {
+            if (err) throw err;
+            console.log('department deleted successfully.')
+            renderMenu();
+        });
 }
 
-const deleteRole = () => {
-    console.log('In progress');
-    renderMenu();
+const deleteRole = async () => {
+    const choices = await connection.query(
+        'SELECT * FROM role'
+    );
+    const roleChoices = choices.map(({ id, title }) => ({ name: title, value: id }));
+    const { delRole } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select role to delete:',
+            choices: roleChoices,
+            name: 'delRole'
+        }
+    ]);
+    connection.query(
+        'DELETE FROM role WHERE ?',
+        {
+            id: delRole
+        },
+        (err, res) => {
+            if (err) throw err;
+            console.log('Role deleted successfully.')
+            renderMenu();
+        });
 }
 
-const deleteEmployee = () => {
-    console.log('In progress');
-    renderMenu();
+const deleteEmployee = async () => {
+    const choices = await connection.query(
+        'SELECT * FROM employee'
+    );
+    const empChoices = choices.map(({ id, first_name, last_name }) => {
+        return ({ name: `${first_name} ${last_name}`, value: id })
+    });
+
+    const { delEmp } = await inquirer.prompt([
+        {
+            type: 'list',
+            message: 'Select employee to delete:',
+            choices: empChoices,
+            name: 'delEmp'
+        }
+    ]);
+    connection.query(
+        'DELETE FROM employee WHERE ?',
+        {
+            id: delEmp
+        },
+        (err, res) => {
+            if (err) throw err;
+            console.log('Employee deleted successfully.')
+            renderMenu();
+        });
 }
 
 // const renderEmployeeByManager = async () => {
